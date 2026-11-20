@@ -1,0 +1,29 @@
+digraph RecoverPlan {
+  graph [rankdir=LR, bgcolor="transparent", pad="0.27", nodesep="0.33", ranksep="0.5", splines=ortho, fontname="DejaVu Sans"];
+  node [shape=box, style="rounded,filled", color="#CBD5E1", fontname="DejaVu Sans", fontsize=11, fontcolor="#0F172A", fillcolor="#F8FAFC", margin="0.15,0.11"];
+  edge [color="#94A3B8", arrowsize=0.7, penwidth=1.25];
+  subgraph cluster_input {
+    label="1  INPUT"; fontname="DejaVu Sans"; fontsize=11; fontcolor="#475569"; style="rounded"; color="#E2E8F0";
+    profile [label="Student profile\nHours • Sessions • Focus"];
+    tasks [label="Tasks\nDeadline • Difficulty • Estimate"];
+  }
+  subgraph cluster_ml {
+    label="2  PREDICT"; fontname="DejaVu Sans"; fontsize=11; fontcolor="#0F766E"; style="rounded"; color="#99F6E4";
+    time [label="Duration prediction\nLinear regression", fillcolor="#CCFBF1", color="#5EEAD4"];
+    risk [label="Delay risk\nLogistic regression", fillcolor="#CCFBF1", color="#5EEAD4"];
+  }
+  subgraph cluster_action {
+    label="3  PLAN & ADAPT"; fontname="DejaVu Sans"; fontsize=11; fontcolor="#475569"; style="rounded"; color="#E2E8F0";
+    schedule [label="Scheduler\n7-day / daily session limit", fillcolor="#DBEAFE", color="#93C5FD"];
+    sessions [label="Study sessions\nCompleted • Delayed • Missed"];
+    recovery [label="Recovery engine\nReschedule pending work", fillcolor="#FEF3C7", color="#FCD34D"];
+  }
+  profile -> time;
+  tasks -> time;
+  time -> risk;
+  risk -> schedule;
+  schedule -> sessions;
+  sessions -> recovery [label="   when delayed / missed", fontsize=9, fontcolor="#64748B"];
+  recovery -> schedule [color="#D97706", constraint=false];
+  sessions -> time [style=dashed, color="#14B8A6", constraint=false, label="  training data", fontsize=9, fontcolor="#0F766E"];
+}

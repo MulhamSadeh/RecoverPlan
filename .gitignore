@@ -1,0 +1,17 @@
+# Local build outputs and runtime state
+/build/
+/recoverplan
+/recoverplan_save.dat
+/sample_tasks.csv
+*.o
+*.out
+
+# IDE and OS noise
+.vscode/
+.DS_Store
+
+# Archive and generated presentations (kept in docs only if deliberately selected)
+/src/*.pdf
+/src/*.pptx
+/src/*.zip
+/src/slides_generator.jsx

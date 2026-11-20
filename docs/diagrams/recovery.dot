@@ -1,0 +1,21 @@
+digraph Recovery {
+  graph [rankdir=TB, bgcolor="transparent", pad="0.3", nodesep="0.3", ranksep="0.38", splines=polyline, fontname="DejaVu Sans"];
+  node [fontname="DejaVu Sans", fontsize=12, shape=box, style="rounded,filled", color="#CBD5E1", fillcolor="#F8FAFC", fontcolor="#0F172A", margin="0.18,0.12"];
+  edge [color="#94A3B8", penwidth=1.35, arrowsize=0.72, fontname="DejaVu Sans", fontsize=10];
+  outcome [label="Record session outcome\nCompleted / Delayed / Missed", fillcolor="#DBEAFE", color="#93C5FD"];
+  need [shape=diamond, label="Recovery\nneeded?", margin="0.1,0.1", fillcolor="#F1F5F9"];
+  done [label="Keep current plan", fillcolor="#F0FDF4", color="#86EFAC"];
+  pending [label="Calculate remaining hours\n& raise affected task priority", fillcolor="#FEF3C7", color="#FCD34D"];
+  space [shape=diamond, label="Time + session\nslots available?", fillcolor="#F1F5F9"];
+  add [label="Create recovery sessions\nwithin deadline", fillcolor="#CCFBF1", color="#5EEAD4"];
+  free [label="Free low-priority hours\nand retry scheduling", fillcolor="#FEF3C7", color="#FCD34D"];
+  warn [label="Report unallocated workload\nwhen capacity is insufficient", fillcolor="#FEE2E2", color="#FCA5A5"];
+  outcome -> need;
+  need -> done [label="No"];
+  need -> pending [label="Yes"];
+  pending -> space;
+  space -> add [label="Yes"];
+  space -> free [label="No"];
+  free -> add [label="If possible"];
+  free -> warn [label="Still insufficient"];
+}

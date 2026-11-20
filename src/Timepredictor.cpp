@@ -2,12 +2,13 @@
 #include <vector>
 #include <iostream>
 using namespace std;
-TimePredictor::TimePredictor(double learingRate, int graditrate)
+TimePredictor::TimePredictor(double learingRate, int graditrate,int featureCount)
 {
     bias = 0;
     this->graditrate=graditrate;
     this->learingRate=learingRate;
-    weights.resize(FEATURECOUNT, 0.0);
+    this->featureCount=featureCount;
+    weights.resize(featureCount, 0.0);
 }
 
 vector<double> TimePredictor::getFeatures(Task &task, StudentProfile &student)
@@ -26,7 +27,7 @@ vector<double> TimePredictor::getFeatures(Task &task, StudentProfile &student)
 double TimePredictor::dotProduct(vector<double>&weights, vector<double>&features )
 {
     double ans = 0.0;
-    for (int i = 0; i < FEATURECOUNT; i++)
+    for (int i = 0; i < features.size(); i++)
     {
         ans += weights[i] * features[i];
     }
@@ -44,19 +45,19 @@ void TimePredictor::train(vector<vector<double>>& X_train, vector<double>& y_tra
     int n = X_train.size();
     for(int i =1; i<=graditrate;i++)
     {
-        vector<double>gradW(FEATURECOUNT);
+        vector<double>gradW(featureCount);
         double gradBias =0.0; 
         for(int j = 0 ; j <n;j++)
         {
             double pred =predict(X_train[j]);
             double error =pred-y_train[j];
-            for(int k =0; k <FEATURECOUNT;k++)
+            for(int k =0; k <featureCount;k++)
             {
                 gradW[k]+=error*X_train[j][k];
             }
             gradBias +=error;   
         }
-        for(int k =0; k <FEATURECOUNT;k++)
+        for(int k =0; k <featureCount;k++)
         {
             weights[k]-=gradW[k]*(learingRate/n);
         }

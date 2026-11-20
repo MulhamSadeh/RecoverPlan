@@ -2,10 +2,22 @@
 #include <iomanip>
 
 using namespace std;
+
+StudentProfile::StudentProfile()
+{
+    name = "Not_Set";
+    availableHours = 0;
+    sessionsPerDay = 1;
+    completionRate = 0;
+    numberOfMissedSessions = 0;
+    focusScore = 5;
+}
+
 StudentProfile::StudentProfile(const string& name, double availableHours)
 {
     this->name = name;
-    this->availableHours = availableHours>=0 ? availableHours :0;
+    this->availableHours = availableHours >= 0 ? availableHours : 0;
+    sessionsPerDay = 1;
     completionRate = 0;
     numberOfMissedSessions = 0;
     focusScore = 5;
@@ -19,6 +31,11 @@ string StudentProfile::getName() const
 double StudentProfile::getAvailableHours() const
 {
     return availableHours;
+}
+
+int StudentProfile::getSessionsPerDay() const
+{
+    return sessionsPerDay;
 }
 
 double StudentProfile::getCompletionRate() const
@@ -53,7 +70,15 @@ void StudentProfile::setName(const string& name)
 
 void StudentProfile::setAvailableHours(double hours)
 {
-   availableHours=hours>=0?hours:0;
+    availableHours = hours >= 0 ? hours : 0;
+}
+
+void StudentProfile::setSessionsPerDay(int sessions)
+{
+    if (sessions >= 1 && sessions <= 24)
+    {
+        sessionsPerDay = sessions;
+    }
 }
 
 void StudentProfile::setCompletionRate(double rate)
@@ -100,6 +125,7 @@ void StudentProfile::printProfile() const
 
     cout << "Student Name: " << name << endl;
     cout << "Available Hours per Day: " << availableHours << endl;
+    cout << "Study Sessions per Day: " << sessionsPerDay << endl;
 
     cout << "Completion Rate: "
          << fixed << setprecision(2)

@@ -18,6 +18,7 @@ class StudentProfile
 private:
     string name;
     double availableHours;
+    int sessionsPerDay;
     double completionRate;
     int numberOfMissedSessions;
     int focusScore;
@@ -31,6 +32,7 @@ public:
 
     string getName() const;
     double getAvailableHours() const;
+    int getSessionsPerDay() const;
     double getCompletionRate() const;
     int getNumberOfMissedSessions() const;
     int getFocusScore() const;
@@ -40,6 +42,7 @@ public:
 
     void setName(const string& name);
     void setAvailableHours(double hours);
+    void setSessionsPerDay(int sessions);
     void setCompletionRate(double rate);
     void setNumberOfMissedSessions(int missed);
     void setFocusScore(int score);

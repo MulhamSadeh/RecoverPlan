@@ -24,7 +24,6 @@ private:
     bool missed;
 
 public:
-    StudySession();
 
     StudySession(
         int sessionId,
