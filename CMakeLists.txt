@@ -18,3 +18,16 @@ if(BUILD_TESTING)
                          $<TARGET_FILE:recoverplan>)
     endif()
 endif()
+
+# Compare the real C++ predictors against simple baselines on synthetic data.
+# This is a learning sanity test, NOT a real-world accuracy benchmark.
+if(BUILD_TESTING)
+    add_executable(model_evaluation
+        experiments/evaluate_models.cpp
+        src/Timepredictor.cpp
+        src/DelayPredictor.cpp
+        src/Task.cpp
+        src/StudentProfile.cpp)
+    target_include_directories(model_evaluation PRIVATE include)
+    add_test(NAME synthetic_model_evaluation COMMAND model_evaluation)
+endif()
