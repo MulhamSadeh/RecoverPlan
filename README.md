@@ -78,6 +78,12 @@ To try the main flow:
 
 The application saves its local state to `recoverplan_save.dat` (not tracked by Git). Older save files are supported; if they don't contain the daily session count, the app defaults to one session per day.
 
+## Checking the ML models
+
+I also added a [reproducible C++ experiment](experiments/README.md) with generated training and test data to check that both prediction models can learn a signal. It compares Linear Regression against a student-estimate baseline (MAE/RMSE), and Logistic Regression against a constant-probability baseline (Brier score and ROC-AUC).
+
+[Results from the synthetic experiment](results/synthetic_evaluation.md) are available, but **they are not accuracy measurements on real students**. This is an implementation check; a proper student-level or chronological held-out evaluation is still needed.
+
 ## Tests
 
 ```bash
@@ -105,7 +111,7 @@ CMakeLists.txt          Build configuration
 
 This is a university MVP, so there are things we haven't finished yet:
 
-- **Model evaluation:** we haven't included a held-out dataset or a comparison with baseline models. The sigmoid plot is just an explanation of the function, not an accuracy result.
+- **Real-world model evaluation:** the new held-out experiment uses synthetic data only, not an independent real-student dataset. The sigmoid plot explains the function, not measured real-world accuracy.
 - **Training data:** three examples are enough to demonstrate the training flow, but nowhere near enough to prove reliable predictions.
 - **Modeling:** feature scaling, regularization, and better data-quality checks are still future work.
 - **Scheduling:** the current planning window is limited to seven days.
