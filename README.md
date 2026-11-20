@@ -1,26 +1,64 @@
 # RecoverPlan
 
-**An adaptive study planner with predictive modeling — a C++17 academic MVP.**
+**Adaptive study scheduling with C++ and machine learning**  
+**University course project · Team project · MVP**
 
-RecoverPlan helps a student turn a set of deadlines into a seven-day study schedule. Instead of using only fixed estimates, it can learn from recorded study sessions to estimate task duration and delay risk, and then reorganize work after sessions are missed or delayed.
+We built RecoverPlan as a **required university project** during our Computer Engineering studies. The idea was to make study planning a little more realistic: instead of writing a fixed timetable and hoping everything goes as planned, we wanted to estimate how long tasks might take and adjust the schedule when someone falls behind.
 
-> **Project status:** Working command-line MVP, not a production application. Prediction models require recorded training examples; the app uses student-entered duration estimates until enough examples are available.
+We worked on this as a team. **I was responsible for the time-prediction and delay-prediction models, and I worked on the final integration.** The rest of the application was split between task management, student profiles, scheduling, recovery, and reports.
 
-![RecoverPlan system architecture](docs/assets/architecture.svg)
+The result is a **working command-line MVP in C++17**. It isn't a finished product, and the prediction models still need proper evaluation with more data.
 
-## What the MVP does
+![RecoverPlan architecture](docs/assets/architecture.svg)
 
-- **Manage tasks:** add tasks manually or import them from CSV; capture subject, type, difficulty, importance, estimated hours, work size, and deadline.
-- **Set realistic study capacity:** configure available hours **and number of sessions per day**. The planner splits tasks into sessions instead of a single long daily block.
-- **Predict study time:** multivariate linear regression implemented from scratch with batch gradient descent.
-- **Estimate delay risk:** logistic regression with a sigmoid output, using predicted duration and student/task context.
-- **Schedule:** use one of five ordering strategies — nearest deadline, highest importance, highest difficulty, shortest task, or highest delay risk (when available).
-- **Recover from setbacks:** record completed, delayed, or missed sessions; attempt to reschedule unfinished hours before deadlines, and report capacity limits.
-- **Keep your work:** save and reload student data, tasks, schedules, and training examples from a local text file.
+## What it can do
 
-## Quick start
+- Add study tasks manually or import them from a CSV file.
+- Set daily study hours and the number of study sessions per day.
+- Estimate task duration using a linear regression model.
+- Estimate the risk of missing a deadline using logistic regression.
+- Build a seven-day schedule using priorities such as deadline, importance, or difficulty.
+- Record completed, delayed, and missed study sessions.
+- Try to reschedule unfinished work when a session is missed.
+- Save and reload student information, tasks, and previous sessions.
 
-Requires **C++17** and **CMake 3.16+**. No third-party C++ libraries are required.
+## My work on the ML part
+
+I implemented the prediction models in C++ instead of relying on a machine learning library. I wanted to work directly with the equations, training loop, and features rather than treating a model as a black box.
+
+### Time prediction
+
+The linear regression model uses seven inputs: task difficulty, importance, the student's estimated time, pages or questions, task type, focus score, and completion rate.
+
+```text
+predicted_hours = w · x + b
+```
+
+I used batch gradient descent to update the weights. Until the application has at least three completed-session examples, it falls back to the student's own time estimate rather than showing an untrained prediction.
+
+### Delay prediction
+
+The logistic regression model uses eight inputs, including predicted task duration, time left until the deadline, available study hours, previous missed sessions, and student-related features.
+
+```text
+p(delay | x) = 1 / (1 + exp(-(w · x + b)))
+```
+
+The model is trained using labeled session results and the binary cross-entropy gradient. It only displays a delay-risk prediction after at least three labeled examples. We use simple low/medium/high thresholds for the MVP; these aren't calibrated or validated probabilities yet.
+
+![Sigmoid function illustration](docs/assets/sigmoid.svg)
+
+## Scheduling and recovery
+
+After entering tasks and study availability, the scheduler builds a plan for up to seven days. It can order tasks by deadline, importance, difficulty, shortest duration, or predicted delay risk (once that model has training data).
+
+When a session is missed or delayed, the recovery engine tries to fit the unfinished work into the remaining available sessions before the deadline. If the available time isn't enough, the application reports the remaining work instead of pretending everything fits.
+
+![Recovery flow](docs/assets/recovery.svg)
+
+## How to run it
+
+**Requirements:** C++17 and CMake 3.16+. No external C++ libraries are needed.
 
 ```bash
 cmake -S . -B build
@@ -28,69 +66,19 @@ cmake --build build
 ./build/recoverplan
 ```
 
-On Windows with a multi-configuration generator, launch `build/Debug/recoverplan.exe` instead.
+On Windows with a multi-configuration generator, the executable may be at `build/Debug/recoverplan.exe`.
 
-For a quick demo:
+To try the main flow:
 
-1. Select **1 – Set student info** and enter a name, study hours/day, sessions/day, and focus score.
-2. Select **4 – Import tasks from CSV** and enter `data/sample_tasks.csv`, or add a task with option **3**.
-3. Select **8 – Build schedule** and choose a priority strategy; view it with **10 – Show schedule**.
-4. Select **11 – Record session results** and mark one session *missed* or *delayed*.
-5. Select **12 – Run recovery plan** and view the adjusted schedule with **10**.
+1. Choose **1 – Set student info** and enter your available study hours, sessions per day, and focus score.
+2. Choose **4 – Import tasks from CSV** and use `data/sample_tasks.csv` (or add tasks with option **3**).
+3. Choose **8 – Build schedule**, then **10 – Show schedule**.
+4. Choose **11 – Record session results** and mark a session missed or delayed.
+5. Choose **12 – Run recovery plan** to see the updated schedule.
 
-The local session state is saved to `recoverplan_save.dat` (excluded from Git). It is automatically loaded on the next run. Saves from the original five-field student format are supported; they default to **one study session/day**.
+The application saves its local state to `recoverplan_save.dat` (not tracked by Git). Older save files are supported; if they don't contain the daily session count, the app defaults to one session per day.
 
-## How it works
-
-### 1. Predict task duration
-
-The time predictor takes seven features:
-
-`difficulty`, `importance`, `student-estimated hours`, `pages/questions`, `task-type weight`, `focus score`, and `completion rate`.
-
-It estimates duration using linear regression:
-
-```text
-predicted_hours = w · x + b
-```
-
-Weights are learned through **batch gradient descent** from previously recorded session outcomes. Before **three completed-session examples** have been collected, the planner uses the student's estimated hours rather than presenting an untrained prediction.
-
-### 2. Estimate delay probability
-
-The delay model uses eight features: predicted duration, difficulty, importance, days remaining, available study hours/day, missed-session count, completion rate, and focus score. A sigmoid maps its linear score into a 0–1 value:
-
-```text
-p(delay | x) = 1 / (1 + exp(-(w · x + b)))
-```
-
-The training update corresponds to the gradient of logistic **binary cross-entropy**. Delay risk is shown as **N/A** until at least **three labeled session results** are recorded. Risk bands used by the report are *Low* (`p < 0.40`), *Medium* (`0.40 ≤ p < 0.70`), and *High* (`p ≥ 0.70`). These are application thresholds, **not validated risk calibration**.
-
-![Theoretical sigmoid transformation, not model evaluation](docs/assets/sigmoid.svg)
-
-### 3. Schedule, observe, recover
-
-The scheduler plans at most seven days, respecting available hours, the configured number of daily sessions, and each task's deadline. When a session is missed or delayed, the recovery engine estimates remaining work, raises the affected task's priority, and tries to place recovery sessions before the deadline. If capacity is tight, it can free lower-priority scheduled hours and report remaining work.
-
-![Recovery workflow](docs/assets/recovery.svg)
-
-## Project structure
-
-```text
-RecoverPlan/
-├── include/                # C++ headers for the domain and ML modules
-├── src/                    # C++ implementation + CLI application
-├── data/sample_tasks.csv   # Importable demonstration tasks
-├── docs/
-│   ├── assets/             # Rendered diagrams and sigmoid illustration
-│   ├── diagrams/           # Editable Graphviz (.dot) diagram sources
-│   └── MODEL_NOTES.md      # Architecture, feature definitions, limitations
-├── tests/smoke_test.py     # End-to-end CLI regression test
-├── CMakeLists.txt
-└── README.md
-```
-
-## Verify the MVP
+## Tests
 
 ```bash
 cmake -S . -B build
@@ -98,28 +86,43 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
-The smoke test covers CSV import, session-count and duration limits, save/reload, missed-session recovery, and backward compatibility with older saves.
+The included smoke test covers CSV import, scheduling limits, saving and loading, missed-session recovery, and compatibility with older saves.
 
-## Limitations and next steps
+## Project structure
 
-- **Not a validated forecasting system yet:** no independent evaluation dataset, held-out accuracy report, or benchmark comparison is included. The sigmoid chart explains the mathematical transformation, **not** measured predictive performance.
-- **Small training datasets:** the three-example threshold enables training for demonstration purposes, but does not establish statistical reliability. Feature scaling, regularization, evaluation, and data-quality controls are future work.
-- **Fixed scheduling horizon:** the current planner uses a seven-day window; deadlines beyond that horizon are capped for scheduling.
-- **Local CLI:** no web/mobile interface, user accounts, hosted database, or deployment is included.
-- **Session data:** training examples are derived from user-entered outcomes, not from a pre-trained external model.
+```text
+include/                C++ headers
+src/                    Application and ML implementation
+data/sample_tasks.csv   Sample tasks for a demo
+docs/assets/            Diagrams and illustrations
+docs/diagrams/          Editable diagram sources
+docs/MODEL_NOTES.md     Model details and limitations
+tests/smoke_test.py     End-to-end CLI test
+CMakeLists.txt          Build configuration
+```
 
-See [technical notes](docs/MODEL_NOTES.md) for the current model inputs and implementation details.
+## What still needs improvement
 
-## Academic team and contributions
+This is a university MVP, so there are things we haven't finished yet:
 
-RecoverPlan was developed as a **team academic project**. Responsibilities below are preserved from the original project documentation:
+- **Model evaluation:** we haven't included a held-out dataset or a comparison with baseline models. The sigmoid plot is just an explanation of the function, not an accuracy result.
+- **Training data:** three examples are enough to demonstrate the training flow, but nowhere near enough to prove reliable predictions.
+- **Modeling:** feature scaling, regularization, and better data-quality checks are still future work.
+- **Scheduling:** the current planning window is limited to seven days.
+- **Interface:** it's a local command-line application; there's no web or mobile version.
 
-| Area | Contributor |
+More implementation details are in [MODEL_NOTES.md](docs/MODEL_NOTES.md).
+
+## Team
+
+We divided the work as follows:
+
+| Part | Team member |
 | --- | --- |
-| Task management and reports | Omar Al-Tasha |
+| Task management and reporting | Omar Al-Tasha |
 | Student profile and study sessions | Ali Al-Or |
-| Time prediction and delay prediction models | Mulham Sadeh |
-| Scheduling and recovery | Mohammad Ramez Hamdo |
+| Time and delay prediction models | Mulham Sadeh |
+| Scheduling and recovery engine | Mohammad Ramez Hamdo |
 | Final integration | Mulham Sadeh |
 
-> The original Arabic presentation supplied with the project documents its intended design. This README distinguishes **implemented MVP behavior** from unvalidated performance claims.
+RecoverPlan started as a **university requirement**, but it also gave me a chance to practice implementing regression models from scratch and connecting them to a real application workflow.
