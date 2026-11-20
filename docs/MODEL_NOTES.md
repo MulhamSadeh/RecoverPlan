@@ -25,9 +25,11 @@ These notes describe the source code shipped with the academic MVP, not experime
 
 For a missed session, all planned hours are pending. For a delayed session, the engine records the remaining work according to the existing session representation. Pending work is assigned to subsequent days when capacity exists, subject to the student's daily hours and sessions limits. Low-priority sessions may be shortened to free hours for recovery. An incomplete recovery is explicitly reported rather than silently treated as completed.
 
-## Evaluation not yet performed
+## Synthetic evaluation and remaining real-data validation
 
-To support an AI/ML internship portfolio, the next essential step is a reproducible dataset and evaluation protocol:
+I've added a [synthetic evaluation experiment](../experiments/evaluate_models.cpp) and [held-out metrics](../results/synthetic_evaluation.md) comparing the actual C++ predictors against simple baselines. These results test the learning implementation on generated signals; **they are not predictions on real student data**. The experiment's learning rates differ from the CLI defaults.
+
+The next steps for a meaningful real-data evaluation are:
 
 1. Create or document a dataset of sessions and outcomes. Keep real and synthetic data clearly separate.
 2. Split by student or by time to prevent leakage across repeated sessions.
@@ -35,7 +37,7 @@ To support an AI/ML internship portfolio, the next essential step is a reproduci
 4. Measure delay prediction with a held-out confusion matrix, ROC-AUC, and calibration analysis when there is enough data.
 5. Record learning rate, iterations, feature scaling, dataset size, limitations, and repeatable train/test seeds.
 
-No performance or accuracy results are claimed in this repository until those measurements exist.
+No **real-world accuracy** is claimed until those measurements exist.
 
 ## Rendering the diagrams
 
